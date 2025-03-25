@@ -1,6 +1,6 @@
 from langchain_openai import ChatOpenAI
 from langchain.prompts import PromptTemplate
-
+import os
 
 numero_de_dias = 7
 numero_de_criancas = 2
@@ -14,7 +14,7 @@ prompt = modelo_do_prompt.format(numero_de_dias=numero_de_dias, numero_de_crianc
 
 print(prompt)
 
-llm = ChatOpenAI(model="gpt-3.5-turbo", api_key="", temperature=0.5)
+llm = ChatOpenAI(model="gpt-3.5-turbo", api_key=os.getenv("OPENAI_API_KEY"), temperature=0.5)
 
 resposta = llm.invoke(prompt)
 
