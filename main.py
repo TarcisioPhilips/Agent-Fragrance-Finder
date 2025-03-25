@@ -1,6 +1,9 @@
 from langchain_openai import ChatOpenAI
 from langchain.prompts import PromptTemplate
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 numero_de_dias = 7
 numero_de_criancas = 2
