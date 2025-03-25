@@ -21,7 +21,4 @@ llm = ChatOpenAI(model="gpt-3.5-turbo", api_key=os.getenv("OPENAI_API_KEY"), tem
 
 resposta = llm.invoke(prompt)
 
-print(resposta)
-
-roteiro_viagem = resposta.choices[0].message.content
-print(roteiro_viagem.content)
+print(resposta.content)
