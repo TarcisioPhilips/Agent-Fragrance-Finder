@@ -1,41 +1,46 @@
-# LangChain e Python: criando ferramentas com a LLM OpenAI
+# Agente de orientação acadêmica
 
-## ⚙️ Guia de Configuração
+## 🔨 Funcionalidades do projeto
 
-Siga os passos abaixo para configurar seu ambiente e utilizar os scripts do projeto.
+Neste projeto desenvolvemos um conjunto de assistentes que permitem auxiliar no processo de identificação de universidades para perfis específicos de estudantes. Para isso, implementamos uma solução em Python, utilizando LangChain e a LLM da OpenAI. Nesta abordagem, criamos um conjunto de agentes para (i) recuperar dados do usuário (ii) gerar um perfil do usuário e (iii) identificar universidades que combinam com este perfil. Além disso, implementamos um hub par agestão dos agentes e ferramentas criadas.
 
-### 1. Criar e Ativar Ambiente Virtual
+## ✔️ Técnicas e tecnologias utilizadas
 
-**Windows:**
+As técnicas e tecnologias utilizadas pra isso são:
+
+- Programação Orientada à Objetos em Python
+- Uso de API GPT OpenAI
+- Uso de cadeias, com LangChain
+- Uso de agentes OpenAI
+- Uso de Agentes ReAct
+- Leitura de arquivos CSV e manipulação de dados
+
+## 🛠️ Abrir e rodar o projeto
+
+Após baixar o projeto, você pode abrir com Visual Studio Code. Em seguida, é necessário que você prepare seu ambiente. Para isso:
+
+### venv no Windows
 
 ```bash
-python -m venv langchain
-langchain\Scripts\activate
+python -m venv agent-poc
+agent-poc\Scripts\activate
 ```
 
-**Mac/Linux:**
+### venv no Mac/Linux
 
 ```bash
-python3 -m venv langchain
-source langchain/bin/activate
+python3 -m venv agent-poc
+source agent-poc/bin/activate
 ```
 
-### 2. Instalar Dependências
-
-Utilize o comando abaixo para instalar as bibliotecas necessárias:
+Em seguida, instale os pacotes utilizando:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Configurar Chave da OpenAI
+## 🔑 Gerar API_KEY e associar ao .env
 
-Crie ou edite o arquivo `.env` adicionando sua chave de API da OpenAI:
-
-```bash
-OPENAI_API_KEY="SUA_CHAVE_DE_API"
+```python
+OPENAI_API_KEY = "SUA_CHAVE_AQUI"
 ```
-
-### Observação Importante
-
-Os scripts `main.py` e `openai_simples.py` atualmente não estão configurados para ler automaticamente as variáveis do arquivo `.env`. Você precisará ajustar manualmente esses scripts caso deseje utilizar variáveis de ambiente.

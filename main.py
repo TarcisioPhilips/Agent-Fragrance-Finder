@@ -1,24 +1,23 @@
 from langchain_openai import ChatOpenAI
-from langchain.prompts import PromptTemplate
+from langchain.tools import BaseTool
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
 
-numero_de_dias = 7
-numero_de_criancas = 2
-atividade = "praia"
+class DadosdeEstudante(BaseTool):
+  name = "Dados de Estudante"
+  description = "Use essa ferramenta para obter os dados do estudante"
 
-modelo_do_prompt = PromptTemplate.from_template( 
-  "Crie um roteiro de viagem de {numero_de_dias} dias, para uma família com {numero_de_criancas} crianças, que gostam de {atividade}."
-)
+  def _run(self, nome_do_estudante: str):
+    return f"O nome do estudante é {nome_do_estudante}"
 
-prompt = modelo_do_prompt.format(numero_de_dias=numero_de_dias, numero_de_criancas=numero_de_criancas, atividade=atividade)
-
-print(prompt)
+pergunta = "Quais os dados da Ana?"
 
 llm = ChatOpenAI(model="gpt-3.5-turbo", api_key=os.getenv("OPENAI_API_KEY"), temperature=0.5)
 
-resposta = llm.invoke(prompt)
+resposta = llm.invoke(pergunta)
 
 print(resposta.content)
+
+
