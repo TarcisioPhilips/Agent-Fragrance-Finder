@@ -50,7 +50,7 @@ TAVILY_API_KEY="your_tavily_api_key"
 ### Start the server
 
 ```bash
-uvicorn main:app --reload
+uv run fastapi dev app/main.py
 ```
 
 The API will be available at `http://localhost:8000`.
