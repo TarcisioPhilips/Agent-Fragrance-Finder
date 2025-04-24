@@ -26,12 +26,9 @@ agent_project/
 │   │   ├── web_search_tool.py      # Ferramenta Tavily Search
 │   │   └── vector_search_tool.py   # Placeholder para busca vetorial
 │   │
-│   ├── llm/                        # Setup dos modelos LLM
-│   │   ├── __init__.py
-│   │   └── openai_llm.py           # Configuração do LLM OpenAI
-│   │
-│   └── utils/                      # Utilitários (se necessário)
-│       └── __init__.py
+│   └── llm/                        # Setup dos modelos LLM
+│       ├── __init__.py
+│       └── openai_llm.py           # Configuração do LLM OpenAI
 │
 ├── tests/                          # Testes (a implementar)
 │   ├── __init__.py
