@@ -1,105 +1,61 @@
 from fastapi import APIRouter, HTTPException, Depends, Header
 from typing import Dict, Any, Optional
 
-from langchain.chains import LLMChain, ConversationChain
-from langchain_core.language_models import BaseLanguageModel
-from langchain.memory import ConversationBufferMemory
+# Langchain/LangGraph imports
+from langchain_core.messages import HumanMessage, AIMessage, BaseMessage # Import message types
+from langgraph.graph.graph import CompiledGraph # Type hint for agent executor
 
+# App specific imports
 from .schemas import ChatRequest, ChatResponse
-# Prompts & Parser
-from app.prompts.router_prompt_template import ROUTER_PROMPT_TEMPLATE, RouterOutput, router_output_parser
-from app.prompts.conversational_prompt import CONVERSATIONAL_PROMPT_TEMPLATE
-# LLM
-from app.llm.openai_llm import get_openai_llm
-# Memory
-from app.memory.session_memory import get_memory
+from app.agents.graph_agent import graph_agent_executor_instance # Import the pre-built agent instance
 
 router = APIRouter()
-
-# --- Simple In-Memory Session Store (for demonstration) ---
-# !! Not suitable for production - use Redis, DB, etc. !!
-session_memory_store: Dict[str, ConversationBufferMemory] = {}
-
-def get_session_memory(session_id: str) -> ConversationBufferMemory:
-    """Gets or creates memory for a given session ID."""
-    if session_id not in session_memory_store:
-        # Create new memory if session doesn't exist
-        session_memory_store[session_id] = get_memory(session_id)
-        print(f"Created new memory for session: {session_id}")
-    else:
-        print(f"Reusing memory for session: {session_id}")
-    return session_memory_store[session_id]
-# -----------------------------------------------------------
-
-# Dependency to get the LLM instance
-def get_llm_dependency() -> BaseLanguageModel:
-    return get_openai_llm()
 
 @router.post("/chat", response_model=ChatResponse)
 async def chat_endpoint(
     request: ChatRequest,
-    llm: BaseLanguageModel = Depends(get_llm_dependency),
-    # Example: Get session ID from a header (replace with your session mechanism)
-    x_session_id: Optional[str] = Header(None, description="Unique session identifier")
+    # Use Header for session ID, default if not provided
+    x_session_id: str = Header("default_session", description="Unique session identifier")
 ):
-    """Handles chat requests with manual routing based on intent."""
-    if not x_session_id:
-        # Simple default if no session ID is provided (consider generating one)
-        x_session_id = "default_session"
-        
+    """Handles chat requests using the LangGraph ReAct agent executor."""
     user_input = request.message
-    response_text = "Error: Could not determine route." # Default error
+    # Config for LangGraph agent, associating the request with a thread_id
+    config = {"configurable": {"thread_id": x_session_id}}
+    
+    response_text = "Agent encountered an issue." # Default error message
 
+    print(f"Invoking agent for session: {x_session_id}")
     try:
-        # 1. Route the input
-        # Create the routing chain (Prompt has PydanticOutputParser)
-        router_llm_chain = LLMChain(llm=llm, prompt=ROUTER_PROMPT_TEMPLATE, verbose=True)
+        # Prepare input for the agent - expects a list of messages
+        input_messages = [HumanMessage(content=user_input)]
         
-        # Invoke routing chain - result is likely {'text': 'JSON string'}
-        raw_route_result = await router_llm_chain.ainvoke({"input": user_input})
-        raw_output_text = raw_route_result.get("text", "{}") # Get raw JSON string
-        
-        # Manually parse the raw text output using the prompt's parser
-        route_result: RouterOutput = router_output_parser.parse(raw_output_text)
-        
-        destination = route_result.destination
-        print(f"Routing decision: {destination}")
+        # Invoke the LangGraph agent executor
+        # The checkpointer associated with the agent handles memory
+        final_state = await graph_agent_executor_instance.ainvoke(
+            {"messages": input_messages}, 
+            config=config
+        )
 
-        # 2. Execute the appropriate logic based on destination
-        if destination == "conversa_geral":
-            # Get or create memory for this session
-            memory = get_session_memory(x_session_id)
-            # Create conversational chain with memory
-            conversation = ConversationChain(llm=llm, prompt=CONVERSATIONAL_PROMPT_TEMPLATE, memory=memory, verbose=True)
-            # Run the chain
-            result = await conversation.ainvoke(user_input) # Pass only input string
-            response_text = result.get("response", "No conversational response.")
-
-        elif destination == "pesquisa_internet":
-            # Placeholder: Implement web search logic here
-            # Example: web_search_tool.run(user_input)
-            print(f"Placeholder: Executing web search for: {user_input}")
-            response_text = f"Placeholder: Resultado da busca web para '{user_input}' iria aqui."
-        
-        elif destination == "consulta_vetores":
-            # Placeholder: Implement vector store query logic here
-            # Example: vector_store_retriever.get_relevant_documents(user_input)
-            print(f"Placeholder: Executing vector query for: {user_input}")
-            response_text = f"Placeholder: Resultado da consulta vetorial para '{user_input}' iria aqui."
-        
+        # Extract the last message from the final state's message list
+        if final_state and 'messages' in final_state and final_state['messages']:
+            last_message: BaseMessage = final_state['messages'][-1]
+            # Check if it's an AIMessage and extract content
+            if isinstance(last_message, AIMessage) and hasattr(last_message, 'content'):
+                response_text = last_message.content
+            else:
+                # Fallback if the last item isn't a standard AIMessage content
+                response_text = str(last_message) 
+                print(f"Warning: Last message type was {type(last_message)}")
         else:
-            # Fallback if destination is unknown (shouldn't happen with good routing prompt)
-            print(f"Warning: Unknown destination '{destination}'. Falling back to default.")
-            # Let's fallback to conversation for safety
-            memory = get_session_memory(x_session_id)
-            conversation = ConversationChain(llm=llm, prompt=CONVERSATIONAL_PROMPT_TEMPLATE, memory=memory, verbose=True)
-            result = await conversation.ainvoke(user_input)
-            response_text = result.get("response", "No fallback response.")
+             print("Warning: Agent finished but final state seems empty or missing messages.")
+             response_text = "Agent process completed, but no response message found."
 
+        print(f"Agent response for session {x_session_id}: {response_text}")
         return ChatResponse(response=response_text)
 
     except Exception as e:
-        print(f"Error during manual routing/execution: {e}")
+        print(f"Error during LangGraph agent execution: {e}")
         import traceback
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail=f"An error occurred processing the request: {str(e)}") 
+        # Provide a more generic error to the user
+        raise HTTPException(status_code=500, detail="An error occurred while processing your request.") 

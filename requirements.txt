@@ -1,11 +1,26 @@
+# Core API
 fastapi
-uvicorn
-requests
-langchain
-langchain-openai
-langchain-community
+uvicorn # Includes standard dependencies like watchfiles
 python-dotenv
+
+# Langchain Core & Integrations
+langchain # Use a recent version
+langchain-openai
+langchain-community # Needed for Tavily tool
+
+# LangGraph for Agent
+langgraph # Add langgraph
+
+# Tools
 tavily-python
-langchainhub
+
+# Potentially remove if specific hub prompts aren't pulled anymore
+# langchainhub>=0.1.15
+
+# Remove pinned versions unless necessary for compatibility
+# httpcore==0.15.0
+# httpx==0.23.0
+
+# Add any other direct dependencies here
 httpcore==0.15.0
 httpx==0.23.0
