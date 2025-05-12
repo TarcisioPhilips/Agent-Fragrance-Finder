@@ -16,7 +16,7 @@ from app.tools.vector_search_tool import vector_search_placeholder
 # Instantiate tools
 # O Agente decidirá qual usar com base na descrição delas
 tools: Sequence[BaseTool] = [
-    get_tavily_search_tool(max_results=2),
+    get_tavily_search_tool(max_results=3),
     vector_search_placeholder,
 ]
 
