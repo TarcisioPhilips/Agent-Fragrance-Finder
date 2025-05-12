@@ -10,7 +10,7 @@ from fastapi import FastAPI
 from .api.v1.routes import router as api_v1_router
 
 app = FastAPI(
-    title="LangChain Agent API",
+    title="Agent API",
     description="API endpoint for a LangChain agent.",
     version="0.1.0",
 )
@@ -21,7 +21,7 @@ app.include_router(api_v1_router, prefix="/api/v1") # Using the imported router
 # Placeholder root endpoint
 @app.get("/")
 async def root():
-    return {"message": "Welcome to the LangChain Agent API"}
+    return {"message": "Welcome to the Agent API"}
 
 # --- Run instruction (for local development) ---
 # To run this app: uvicorn app.main:app --reload --app-dir .
